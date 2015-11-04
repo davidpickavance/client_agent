@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Twilio Client</title>
+    <script type="text/javascript"
+      src="//static.twilio.com/libs/twiliojs/1.2/twilio.min.js"></script>
+    <script type="text/javascript"
+      src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js">
+    </script>
+    <link href="//static0.twilio.com/packages/quickstart/client.css"
+      type="text/css" rel="stylesheet" />
+    <input type="text" id="number" name="number" placeholder="Enter a phone number to call"/>
+    <script type="text/javascript">
+      var connection
+      Twilio.Device.setup("{{capability_token}}", { debug: true });
+
+      Twilio.Device.offline(function (device) {
+        $("#log").text("Offline");
+      })
+
+      Twilio.Device.ready(function (device) {
+        $("#log").text("Ready");
+      });
+
+      Twilio.Device.incoming(function (connection) {
+             if (confirm('Accept incoming call from ' + connection.parameters.From + '?')){
+                  connection.accept();
+             } else {
+                  connection.reject();
+             }
+      });
+
+      Twilio.Device.disconnect(function (conn) {
+        $("#log").text("Call ended");
+      });
+
+      Twilio.Device.error(function (error) {
+        $("#log").text("Error: " + error.message);
+      });
+
+      Twilio.Device.connect(function (conn) {
+        $("#log").text("Successfully established call");
+        console.log(conn.parameters)
+      });
+
+      function call() {
+         params = {"tocall": $("#number").val()};
+         connection = Twilio.Device.connect(params);
+         console.log(connection.parameters);
+       }
+
+      function transfer() {
+        console.log(connection.parameters)
+        $.ajax("/transfer", {
+          method:"POST",
+          dataType:"text",
+          data:{transfer_to:"none",
+                params:connection.parameters}})
+      }
+
+      function hangup() {
+        Twilio.Device.disconnectAll();
+      }
+      
+    </script>
+  </head>
+  <body>
+    <button class="call" onclick="call();">
+      Call
+    </button>
+    <button class="call" onclick="transfer();">
+      Transfer
+    </button>
+
+    <button class="call" onclick="hangup();">
+      Hangup
+    </button>
+
+    <div id="log">Loading...</div>
+    <div id="sid">No SID yet</div>
+
+    
+  </body>
+</html>
